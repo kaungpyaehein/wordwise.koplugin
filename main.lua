@@ -113,6 +113,12 @@ function WordWise:getShowUnderline()
     return G_reader_settings:nilOrTrue("wordwise_show_underline")
 end
 
+-- Whether to draw the small downward arrow (caret) under each gloss. Off by
+-- default.
+function WordWise:getShowArrow()
+    return G_reader_settings:isTrue("wordwise_show_arrow")
+end
+
 -- Resolve the dictionary path: a user DB in WW_DIR (wordwise.db, else the first
 -- *.db found there) overrides the dictionary bundled with the plugin. If none
 -- is present but this is a Kindle with its own Word Wise corpus on disk, that
@@ -473,7 +479,11 @@ local CARET_DEPTH = 7  -- height (and half-width) of the downward caret
 -- exact word below it, optionally flanked by a thin horizontal rule spanning
 -- [x0, x1] (the "underline"). The caret always identifies the word; with_rule
 -- adds the underline when the reader wants it.
-local function drawWordMarker(bb, x0, x1, cx, ytop, color, with_rule)
+local function drawWordMarker(bb, x0, x1, cx, ytop, color, with_rule, with_arrow)
+    if not with_arrow then
+        if with_rule then bb:paintRect(x0, ytop, x1 - x0, 1, color) end
+        return
+    end
     local half = CARET_DEPTH
     if cx - half < x0 then cx = x0 + half end
     if cx + half > x1 then cx = x1 - half end
@@ -524,6 +534,7 @@ function WordWise:paintHints(bb, x, y)
     local screen_w = bb:getWidth()
     local color = Blitbuffer.COLOR_BLACK
     local show_underline = self:getShowUnderline()
+    local show_arrow = self:getShowArrow()
 
     -- Keep glosses within the text content column, never in the page margins: a
     -- gloss centered over a word near the column edge would otherwise spill into
@@ -618,7 +629,7 @@ function WordWise:paintHints(bb, x, y)
                 self:drawGloss(bb, it.x0, it.baseline, it.h.text, color)
                 -- The caret always points at the word; the underline rule is
                 -- only drawn when the reader has it enabled.
-                drawWordMarker(bb, it.x0, it.x1, it.word_cx, it.marker_y, color, show_underline)
+                drawWordMarker(bb, it.x0, it.x1, it.word_cx, it.marker_y, color, show_underline, show_arrow)
             end
         end
     end
@@ -676,6 +687,11 @@ function WordWise:setGlossFontSize(value)
     G_reader_settings:saveSetting("wordwise_gloss_font_size", value)
     -- rebuild the cached face; paintHints re-measures gloss widths from it
     self:loadGlossFaces(value)
+    self:refresh()
+end
+
+function WordWise:setShowArrow(on)
+    G_reader_settings:saveSetting("wordwise_show_arrow", on)
     self:refresh()
 end
 
@@ -751,6 +767,12 @@ function WordWise:getSubMenu()
             checked_func = function() return self:getShowUnderline() end,
             enabled_func = function() return self:isSupportedDocument() and self:hasDB() end,
             callback = function() self:setShowUnderline(not self:getShowUnderline()) end,
+        },
+        {
+            text = self:tr("arrow"),
+            checked_func = function() return self:getShowArrow() end,
+            enabled_func = function() return self:isSupportedDocument() and self:hasDB() end,
+            callback = function() self:setShowArrow(not self:getShowArrow()) end,
         },
         {
             text_func = function()
