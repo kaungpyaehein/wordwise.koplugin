@@ -24,6 +24,7 @@ local Font = require("ui/font")
 local InfoMessage = require("ui/widget/infomessage")
 local RenderText = require("ui/rendertext")
 local SpinWidget = require("ui/widget/spinwidget")
+local TextWidget = require("ui/widget/textwidget")
 local UIManager = require("ui/uimanager")
 local WidgetContainer = require("ui/widget/container/widgetcontainer")
 local lfs = require("libs/libkoreader-lfs")
@@ -31,6 +32,18 @@ local _ = require("gettext")
 local T = require("ffi/util").template
 
 local WordWiseDB = require("wordwise_db")
+
+-- Complex scripts (Myanmar) need OpenType shaping, which RenderText's
+-- glyph-by-glyph path lacks. Such glosses are measured and drawn through
+-- TextWidget (xtext/HarfBuzz) with a bundled Noto Sans Myanmar face.
+local PLUGIN_DIR = debug.getinfo(1, "S").source:match("^@(.*)/[^/]*$") or "."
+local MYANMAR_FONT = PLUGIN_DIR .. "/fonts/NotoSansMyanmar-Regular.ttf"
+local HAS_MYANMAR_FONT = lfs.attributes(MYANMAR_FONT, "mode") == "file"
+
+local function needsShaping(text)
+    -- U+1000..U+109F (Myanmar) is UTF-8 E1 80 80 .. E1 82 9F
+    return text:find("\225[\128-\130]") ~= nil
+end
 local WordWiseKindle = require("wordwise_kindle")
 local WordWiseL10N = require("wordwise_l10n")
 
@@ -178,7 +191,7 @@ function WordWise:init()
     self.ui.menu:registerToMainMenu(self)
     -- infofont is NotoSans (proportional), closer to Kindle's gloss font than
     -- the monospace infont.
-    self.gloss_face = Font:getFace("infofont", self:getGlossFontSize())
+    self:loadGlossFaces(self:getGlossFontSize())
     self.hints = {}
     -- Register the overlay painter with ReaderView.
     self.overlay = { paintTo = function(_, bb, x, y) self:paintHints(bb, x, y) end }
@@ -530,7 +543,7 @@ function WordWise:paintHints(bb, x, y)
     local ascent, descent = metrics.ascent, metrics.descent
     local items = {}
     for _, h in ipairs(self.hints) do
-        local w = RenderText:sizeUtf8Text(0, screen_w, self.gloss_face, h.text, true, false).x
+        local w = self:glossWidth(h.text, screen_w)
         local tx = math.floor(h.box.x + (h.box.w - w) / 2 + 0.5)
         local max_x = right_bound - w
         if tx > max_x then tx = max_x end
@@ -581,8 +594,7 @@ function WordWise:paintHints(bb, x, y)
             end
             if fits then
                 list[#list + 1] = { it.x0, it.x1 }
-                RenderText:renderUtf8Text(bb, it.x0, it.baseline, self.gloss_face,
-                    it.h.text, true, false, color)
+                self:drawGloss(bb, it.x0, it.baseline, it.h.text, color)
                 -- The caret always points at the word; the underline rule is
                 -- only drawn when the reader has it enabled.
                 drawWordMarker(bb, it.x0, it.x1, it.word_cx, it.marker_y, color, show_underline)
@@ -598,6 +610,35 @@ function WordWise:refresh()
     UIManager:setDirty("all", "ui")
 end
 
+function WordWise:loadGlossFaces(size)
+    self.gloss_face = Font:getFace("infofont", size)
+    self.complex_face = HAS_MYANMAR_FONT and Font:getFace(MYANMAR_FONT, size) or self.gloss_face
+end
+
+function WordWise:glossWidget(text, color)
+    return TextWidget:new{ text = text, face = self.complex_face, padding = 0, fgcolor = color }
+end
+
+function WordWise:glossWidth(text, max_w)
+    if needsShaping(text) then
+        local tw = self:glossWidget(text)
+        local w = tw:getSize().w
+        tw:free()
+        return w
+    end
+    return RenderText:sizeUtf8Text(0, max_w, self.gloss_face, text, true, false).x
+end
+
+function WordWise:drawGloss(bb, x, baseline, text, color)
+    if needsShaping(text) then
+        local tw = self:glossWidget(text, color)
+        tw:paintTo(bb, x, baseline - tw:getBaseline())
+        tw:free()
+        return
+    end
+    RenderText:renderUtf8Text(bb, x, baseline, self.gloss_face, text, true, false, color)
+end
+
 function WordWise:setHintLevel(value)
     G_reader_settings:saveSetting("wordwise_hint_level", value)
     self:refresh()
@@ -606,7 +647,7 @@ end
 function WordWise:setGlossFontSize(value)
     G_reader_settings:saveSetting("wordwise_gloss_font_size", value)
     -- rebuild the cached face; paintHints re-measures gloss widths from it
-    self.gloss_face = Font:getFace("infofont", value)
+    self:loadGlossFaces(value)
     self:refresh()
 end
 
