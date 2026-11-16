@@ -37,15 +37,29 @@ local WordWiseDB = require("wordwise_db")
 -- Complex scripts (Myanmar) need OpenType shaping, which RenderText's
 -- glyph-by-glyph path lacks. Such glosses are measured and drawn through
 -- TextWidget (xtext/HarfBuzz) with a bundled Noto Sans Myanmar face.
-local PLUGIN_DIR = debug.getinfo(1, "S").source:match("^@(.*)/[^/]*$") or "."
--- PluginLoader passes a relative path ("plugins/x.koplugin"). Font:getFace
--- resolves anything not starting with "/" or "./" inside KOReader's fonts/
--- dir, so anchor relative paths with "./" or the face silently fails to load.
-if not PLUGIN_DIR:match("^/") and not PLUGIN_DIR:match("^%./") then
-    PLUGIN_DIR = "./" .. PLUGIN_DIR
-end
+local PLUGIN_DIR = (debug.getinfo(1, "S").source:match("^@(.*)/[^/]*$") or ".")
+    :gsub("^%./", "")
 local MYANMAR_FONT = PLUGIN_DIR .. "/fonts/NotoSansMyanmar-Regular.ttf"
 local HAS_MYANMAR_FONT = lfs.attributes(MYANMAR_FONT, "mode") == "file"
+
+-- Font:getFace resolves paths against KOReader's fonts/ dir: older releases
+-- (e.g. v2025.10) always prepend "<fontdir>/", newer ones accept "/" and "./"
+-- paths as-is. PluginLoader gives a path relative to KOReader's root
+-- ("plugins/x.koplugin"), so try it relative to fonts/ first, then as given.
+local function loadMyanmarFace(size)
+    if not HAS_MYANMAR_FONT then return nil end
+    local candidates = {}
+    if not MYANMAR_FONT:match("^/") then
+        candidates[#candidates + 1] = "../" .. MYANMAR_FONT
+        candidates[#candidates + 1] = "./" .. MYANMAR_FONT
+    else
+        candidates[#candidates + 1] = MYANMAR_FONT
+    end
+    for _, path in ipairs(candidates) do
+        local face = Font:getFace(path, size)
+        if face then return face end
+    end
+end
 
 local function needsShaping(text)
     -- U+1000..U+109F (Myanmar) is UTF-8 E1 80 80 .. E1 82 9F
@@ -619,11 +633,14 @@ end
 
 function WordWise:loadGlossFaces(size)
     self.gloss_face = Font:getFace("infofont", size)
-    self.complex_face = HAS_MYANMAR_FONT and Font:getFace(MYANMAR_FONT, size) or nil
+    self.complex_face = loadMyanmarFace(size)
     if not self.complex_face then
         logger.warn("WordWise: cannot load Myanmar font", MYANMAR_FONT)
         self.complex_face = self.gloss_face
     end
+    logger.info("WordWise: myanmar font", MYANMAR_FONT, "exists", HAS_MYANMAR_FONT,
+        "face", self.complex_face and self.complex_face.realname,
+        "xtext", G_reader_settings:nilOrTrue("use_xtext"))
 end
 
 function WordWise:glossWidget(text, color)
