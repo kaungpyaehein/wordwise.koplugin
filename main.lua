@@ -28,6 +28,7 @@ local TextWidget = require("ui/widget/textwidget")
 local UIManager = require("ui/uimanager")
 local WidgetContainer = require("ui/widget/container/widgetcontainer")
 local lfs = require("libs/libkoreader-lfs")
+local logger = require("logger")
 local _ = require("gettext")
 local T = require("ffi/util").template
 
@@ -37,6 +38,12 @@ local WordWiseDB = require("wordwise_db")
 -- glyph-by-glyph path lacks. Such glosses are measured and drawn through
 -- TextWidget (xtext/HarfBuzz) with a bundled Noto Sans Myanmar face.
 local PLUGIN_DIR = debug.getinfo(1, "S").source:match("^@(.*)/[^/]*$") or "."
+-- PluginLoader passes a relative path ("plugins/x.koplugin"). Font:getFace
+-- resolves anything not starting with "/" or "./" inside KOReader's fonts/
+-- dir, so anchor relative paths with "./" or the face silently fails to load.
+if not PLUGIN_DIR:match("^/") and not PLUGIN_DIR:match("^%./") then
+    PLUGIN_DIR = "./" .. PLUGIN_DIR
+end
 local MYANMAR_FONT = PLUGIN_DIR .. "/fonts/NotoSansMyanmar-Regular.ttf"
 local HAS_MYANMAR_FONT = lfs.attributes(MYANMAR_FONT, "mode") == "file"
 
@@ -612,7 +619,11 @@ end
 
 function WordWise:loadGlossFaces(size)
     self.gloss_face = Font:getFace("infofont", size)
-    self.complex_face = HAS_MYANMAR_FONT and Font:getFace(MYANMAR_FONT, size) or self.gloss_face
+    self.complex_face = HAS_MYANMAR_FONT and Font:getFace(MYANMAR_FONT, size) or nil
+    if not self.complex_face then
+        logger.warn("WordWise: cannot load Myanmar font", MYANMAR_FONT)
+        self.complex_face = self.gloss_face
+    end
 end
 
 function WordWise:glossWidget(text, color)
