@@ -177,7 +177,6 @@ return {
         toggle = "Toggle Word Wise hints",
         show_inline = "Show inline hints",
         underline = "Underline hinted words",
-        arrow = "Show arrow under hints",
         hint_level = "Hint level: %1",
         level_rarest = "1 — only the rarest words",
         level_most = "5 — most hints",

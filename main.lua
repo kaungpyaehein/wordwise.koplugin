@@ -106,17 +106,10 @@ function WordWise:getGlossFontSize()
     return G_reader_settings:readSetting("wordwise_gloss_font_size") or GLOSS_FONT_SIZE
 end
 
--- Whether to draw the horizontal underline rule beneath each gloss. The
--- downward caret that points at the word is always drawn; this only controls
--- the "underline" part. On by default. Global, like the hint level.
+-- Whether to draw the horizontal underline rule beneath each gloss. On by
+-- default. Global, like the hint level.
 function WordWise:getShowUnderline()
     return G_reader_settings:nilOrTrue("wordwise_show_underline")
-end
-
--- Whether to draw the small downward arrow (caret) under each gloss. Off by
--- default.
-function WordWise:getShowArrow()
-    return G_reader_settings:isTrue("wordwise_show_arrow")
 end
 
 -- Resolve the dictionary path: a user DB in WW_DIR (wordwise.db, else the first
@@ -473,29 +466,11 @@ function WordWise:computePageHints()
 end
 
 local GLOSS_HGAP = 8   -- minimum horizontal gap between two glosses on a line
-local CARET_DEPTH = 7  -- height (and half-width) of the downward caret
+local CARET_DEPTH = 7  -- clearance kept between the gloss rule and the word
 
--- Draw the Kindle-style marker: a small downward caret at cx that points to the
--- exact word below it, optionally flanked by a thin horizontal rule spanning
--- [x0, x1] (the "underline"). The caret always identifies the word; with_rule
--- adds the underline when the reader wants it.
-local function drawWordMarker(bb, x0, x1, cx, ytop, color, with_rule, with_arrow)
-    if not with_arrow then
-        if with_rule then bb:paintRect(x0, ytop, x1 - x0, 1, color) end
-        return
-    end
-    local half = CARET_DEPTH
-    if cx - half < x0 then cx = x0 + half end
-    if cx + half > x1 then cx = x1 - half end
-    if with_rule then
-        if cx - half > x0 then bb:paintRect(x0, ytop, (cx - half) - x0, 1, color) end
-        if x1 > cx + half then bb:paintRect(cx + half, ytop, x1 - (cx + half), 1, color) end
-    end
-    -- two diagonals meeting at the tip (cx, ytop + half), pointing down
-    for i = 0, half do
-        bb:setPixel(cx - half + i, ytop + i, color)
-        bb:setPixel(cx + half - i, ytop + i, color)
-    end
+-- Draw the optional thin rule spanning [x0, x1] under a gloss. No arrow.
+local function drawWordMarker(bb, x0, x1, ytop, color, with_rule)
+    if with_rule then bb:paintRect(x0, ytop, x1 - x0, 1, color) end
 end
 
 -- Font-level vertical metrics (max ascent/descent) for the current gloss face,
@@ -534,7 +509,6 @@ function WordWise:paintHints(bb, x, y)
     local screen_w = bb:getWidth()
     local color = Blitbuffer.COLOR_BLACK
     local show_underline = self:getShowUnderline()
-    local show_arrow = self:getShowArrow()
 
     -- Keep glosses within the text content column, never in the page margins: a
     -- gloss centered over a word near the column edge would otherwise spill into
@@ -627,9 +601,7 @@ function WordWise:paintHints(bb, x, y)
             if fits then
                 list[#list + 1] = { it.x0, it.x1 }
                 self:drawGloss(bb, it.x0, it.baseline, it.h.text, color)
-                -- The caret always points at the word; the underline rule is
-                -- only drawn when the reader has it enabled.
-                drawWordMarker(bb, it.x0, it.x1, it.word_cx, it.marker_y, color, show_underline, show_arrow)
+                drawWordMarker(bb, it.x0, it.x1, it.marker_y, color, show_underline)
             end
         end
     end
@@ -687,11 +659,6 @@ function WordWise:setGlossFontSize(value)
     G_reader_settings:saveSetting("wordwise_gloss_font_size", value)
     -- rebuild the cached face; paintHints re-measures gloss widths from it
     self:loadGlossFaces(value)
-    self:refresh()
-end
-
-function WordWise:setShowArrow(on)
-    G_reader_settings:saveSetting("wordwise_show_arrow", on)
     self:refresh()
 end
 
@@ -767,12 +734,6 @@ function WordWise:getSubMenu()
             checked_func = function() return self:getShowUnderline() end,
             enabled_func = function() return self:isSupportedDocument() and self:hasDB() end,
             callback = function() self:setShowUnderline(not self:getShowUnderline()) end,
-        },
-        {
-            text = self:tr("arrow"),
-            checked_func = function() return self:getShowArrow() end,
-            enabled_func = function() return self:isSupportedDocument() and self:hasDB() end,
-            callback = function() self:setShowArrow(not self:getShowArrow()) end,
         },
         {
             text_func = function()
