@@ -2,16 +2,15 @@
 
 > **This fork** shows **Burmese (Myanmar) glosses** above difficult English words.
 >
-> - `wordwise.db` holds ~27k English words with short Burmese glosses. They come from
->   *Myanmar Kindle Dictionary 1.0 (Unicode)* by Zar Ni Oo (Myanmar Kindle User Group).
->   Glosses were reordered from visual (Zawgyi-style) typing into standard Unicode
->   order and trimmed to the first sense. Difficulty bands come from `wordfreq`.
+> - `wordwise.db` holds ~33k English words with short Burmese glosses from the
+>   **[Ornagai](https://www.ornagai.com) English–Myanmar dictionary**. All credit for
+>   the dictionary content goes to Ornagai. Each gloss is the first clause of the
+>   first sense. Difficulty bands come from `wordfreq`.
 > - Myanmar glosses are drawn with OpenType shaping (KOReader xtext) using the bundled
 >   `fonts/NotoSansMyanmar-Regular.ttf` (SIL OFL 1.1, see `fonts/OFL.txt`). Keep
 >   **Settings → Developer options → Use xtext** on (the default).
-> - Rebuild the DB: `tools/build_myanmar_db.py` (usage in the file header).
->
-> The original dictionary data has no stated license; credit goes to its authors.
+> - Rebuild the DB from `Ornagai.dictionary`: `tools/build_ornagai_db.py`
+>   (usage in the file header).
 
 Shows short inline definitions above difficult words, like Kindle's Word Wise —
 painted as a per-page overlay on the book you're reading (no copy, no file
