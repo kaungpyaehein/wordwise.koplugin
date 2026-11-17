@@ -1,58 +1,33 @@
-# Word Wise (KOReader plugin) — Myanmar (Burmese) edition
+# Word Wise for KOReader
 
-> **This fork** shows **Burmese (Myanmar) glosses** above difficult English words.
->
-> - `wordwise.db` holds ~33k English words with short Burmese glosses from the
->   **[Ornagai](https://www.ornagai.com) English–Myanmar dictionary**. All credit for
->   the dictionary content goes to Ornagai. Each gloss is the first clause of the
->   first sense. Difficulty bands come from `wordfreq`.
-> - Myanmar glosses are drawn with OpenType shaping (KOReader xtext) using the bundled
->   `fonts/NotoSansMyanmar-Regular.ttf` (SIL OFL 1.1, see `fonts/OFL.txt`). Keep
->   **Settings → Developer options → Use xtext** on (the default).
-> - Rebuild the DB from `Ornagai.dictionary`: `tools/build_ornagai_db.py`
->   (usage in the file header).
-
-Shows short inline definitions above difficult words, like Kindle's Word Wise —
-painted as a per-page overlay on the book you're reading (no copy, no file
-rewrite). Difficulty is adjustable: a low hint level shows only rare/hard words,
-a high one also glosses more common ones.
+A KOReader plugin that displays Burmese meanings directly above difficult English words.
+Dictionary data powered by [Ornagai](https://www.ornagai.com) — thank you, [Ko Saturngod](https://www.saturngod.net/)!
 
 ![Word Wise showing glosses above difficult words](screenshot.png)
 
-## Install
+## Installation & Setup
 
-1. Download **`wordwise.koplugin.zip`** from the
-   [latest release](https://github.com/asxelot/wordwise.koplugin/releases/latest)
-   and unzip it. It expands to a correctly-named `wordwise.koplugin/` folder
-   (dictionary bundled) — ready to copy, no renaming needed.
-2. Copy the `wordwise.koplugin` folder into KOReader's `plugins/` directory:
-   - Kindle: `/mnt/us/koreader/plugins/`
-   - Kobo: `/mnt/onboard/.adds/koreader/plugins/`
-   - Android: `koreader/plugins/`
-   - Desktop / emulator: `<koreader>/plugins/`
-3. Restart KOReader.
+1. **Download:** grab `wordwise.koplugin.zip` from the [latest release](https://github.com/kaungpyaehein/wordwise.koplugin/releases/latest).
+2. **Install:** unzip the file and move the `wordwise.koplugin` folder into your `koreader/plugins/` directory (Kobo: `.adds/koreader/plugins/`).
+3. **Enable:** restart KOReader, then go to **☰ → More tools → Word Wise → Show inline hints**.
+
+## မြန်မာ
+
+ခက်ခဲတဲ့ အင်္ဂလိပ်စကားလုံးတွေရဲ့ အပေါ်မှာ မြန်မာအဓိပ္ပာယ်ကို တိုက်ရိုက်ပြပေးမယ့် KOReader plugin ဖြစ်ပါတယ်။
+အဘိဓာန်ဒေတာကို [Ornagai](https://www.ornagai.com) မှ ရယူထားပါသည် — [ကို Saturngod](https://www.saturngod.net/) ကို ကျေးဇူးတင်ပါသည်။
+
+**ထည့်သွင်းအသုံးပြုနည်း**
+
+၁။ **ဒေါင်းလုဒ်ဆွဲပါ** – [Release စာမျက်နှာ](https://github.com/kaungpyaehein/wordwise.koplugin/releases/latest) မှ `wordwise.koplugin.zip` ဖိုင်ကို ဒေါင်းလုဒ်ဆွဲပါ။
+၂။ **ဖိုင်ဖြည်ပြီး ထည့်ပါ** – Zip ဖိုင်ကို ဖြည်ပြီး ရလာတဲ့ `wordwise.koplugin` ဖိုင်တွဲကို `koreader/plugins/` ထဲသို့ ကူးထည့်ပါ (Kobo စက်များအတွက် `.adds/koreader/plugins/`)။
+၃။ **ဖွင့်သုံးပါ** – KOReader ကို ပြန်ဖွင့်ပြီး **☰ → More tools → Word Wise → Show inline hints** ကို နှိပ်၍ အသုံးပြုနိုင်ပါပြီ။
+
+---
+
+Font: Noto Sans Myanmar (SIL OFL 1.1) · Based on [asxelot/wordwise.koplugin](https://github.com/asxelot/wordwise.koplugin)
 
 <details>
-<summary>Install from source instead</summary>
-
-`git clone` this repo, or use the green **Code → Download ZIP** button and
-unzip it. A ZIP download unzips as **`wordwise.koplugin-main`** — remove the
-`-main` so the folder ends in `.koplugin`, or KOReader won't recognize it
-(cloning already gives the right name). Then copy it into `plugins/` as above.
-</details>
-
-## Activate
-
-Open a book, then: **☰ (or ⋮) → more tools → Word Wise → Show inline hints**.
-Pick a hint level (1 = only the rarest words … 5 = most hints). Short definitions
-then appear above difficult words on every page. Turn it off from the same menu.
-
-## A dictionary is included
-
-The plugin **ships with a built-in open dictionary** (`wordwise.db`, ~30k hard
-words), so it works out of the box — no setup. The bundled dictionary contains
-no proprietary content and is freely redistributable (see *How the bundled
-dictionary is built* below).
+<summary>More (developers)</summary>
 
 ### Bring your own (optional)
 
@@ -97,27 +72,17 @@ in the text still match base-form entries.
 
 ## How the bundled dictionary is built
 
-`wordwise.db` is assembled from three open ingredients (`tools/build_open_dict.py`):
-
-- **word list** — Open English WordNet lemmas (permissive license)
-- **difficulty** — word-frequency (Zipf) from the [`wordfreq`](https://pypi.org/project/wordfreq/)
-  package; only words below the "common" threshold are kept as hard words
-- **glosses** — short definitions written for this project, stored in the
-  editable source `tools/open_glosses.tsv` (`word<TAB>gloss`)
-
-To improve a definition, edit `open_glosses.tsv` and rebuild:
+`wordwise.db` is built from the Ornagai English–Myanmar dictionary with
+`tools/build_ornagai_db.py` (usage in the file header; needs `pip install wordfreq`):
 
 ```sh
 cd tools
-python3 build_open_dict.py build --glosses open_glosses.tsv --out ../wordwise.db
+python3 build_ornagai_db.py Ornagai.dictionary ../wordwise.db
 ```
 
-To regenerate the hard-word list itself (needs `pip install wn wordfreq` and the
-`oewn:2024` lexicon):
-
-```sh
-python3 build_open_dict.py candidates > candidates.tsv
-```
+The original English-only open dictionary from the upstream plugin can still be
+built with `tools/build_open_dict.py` and the editable glosses in
+`tools/open_glosses.tsv`.
 
 ### Alternative sources
 
@@ -130,3 +95,5 @@ python3 build_open_dict.py candidates > candidates.tsv
   personal use only; **do not redistribute it.**
 - **Wiktionary (CC BY-SA)** via the [Proficiency](https://github.com/xxyzz/Proficiency)
   `en_en` data, reshaped into the canonical schema.
+
+</details>
