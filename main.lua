@@ -547,6 +547,13 @@ function WordWise:paintHints(bb, x, y)
     -- descenders looks the same as one with them.
     local metrics = self:getGlossMetrics()
     local ascent, descent = metrics.ascent, metrics.descent
+    -- Noto Sans Myanmar ink reaches ~1.0 em above the baseline and ~0.54 em
+    -- below it (stacked marks like ု ူ under medials); its hhea box (1.32 /
+    -- 0.86 em) is far taller than the ink, so use the ink extents instead.
+    local GLOSS_NEAR_GAP = 2  -- gap between a gloss and the top of its word
+    local msize = self.complex_face and self.complex_face.size or 0
+    local myanmar_ascent = math.ceil(msize * 1.0)
+    local myanmar_descent = math.ceil(msize * 0.54)
     local items = {}
     for _, h in ipairs(self.hints) do
         local w = self:glossWidth(h.text, screen_w)
@@ -555,14 +562,22 @@ function WordWise:paintHints(bb, x, y)
         if tx > max_x then tx = max_x end
         if tx < left_bound then tx = left_bound end
         local leading = h.box.h * (1 - 100 / spacing)
-        local word_top = h.box.y + math.floor(leading / 2)
-        -- Center the font's ascent/descent box on box.y (the band's centre) so
-        -- all glosses share one baseline regardless of their glyphs. Keep it
-        -- clear of the word below; the rule sits a fixed gap under the baseline's
-        -- descent line and the caret points down at the word (never onto it).
-        local baseline = h.box.y + (ascent - descent) / 2
-        baseline = math.floor(math.min(baseline, word_top - 1 - descent) + 0.5)
-        local marker_y = math.min(baseline + descent + GLOSS_RULE_GAP, word_top - CARET_DEPTH - 1)
+        local half = math.floor(leading / 2)
+        local word_top = h.box.y + half
+        local a, d = ascent, descent
+        if self.complex_face ~= self.gloss_face and needsShaping(h.text) then
+            a, d = myanmar_ascent, myanmar_descent
+        end
+        -- Sit the gloss just above its own word, not in the middle of the gap
+        -- where it reads as belonging to the line above. With the rule shown,
+        -- leave room for it between the gloss and the word. Never climb into
+        -- the previous line's glyphs when the line spacing is tight.
+        local clearance = show_underline and (GLOSS_RULE_GAP + 1 + GLOSS_NEAR_GAP) or GLOSS_NEAR_GAP
+        local baseline = word_top - clearance - d
+        local prev_bottom = h.box.y - half
+        if baseline - a < prev_bottom then baseline = prev_bottom + a end
+        baseline = math.floor(math.min(baseline, word_top - 1 - d) + 0.5)
+        local marker_y = math.min(baseline + d + GLOSS_RULE_GAP, word_top - GLOSS_NEAR_GAP - 1)
         items[#items + 1] = {
             h = h, x0 = tx, x1 = tx + w, band = h.box.y,
             difficulty = h.difficulty or 5,
