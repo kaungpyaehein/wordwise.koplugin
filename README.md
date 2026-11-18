@@ -9,7 +9,8 @@ Dictionary data powered by [Ornagai](https://www.ornagai.com) — thank you, [Ko
 
 1. **Download:** grab `wordwise.koplugin.zip` from the [latest release](https://github.com/kaungpyaehein/wordwise.koplugin/releases/latest).
 2. **Install:** unzip the file and move the `wordwise.koplugin` folder into your `koreader/plugins/` directory (Kobo: `.adds/koreader/plugins/`).
-3. **Enable:** restart KOReader, then go to **☰ → More tools → Word Wise → Show inline hints**.
+3. **Enable:** restart KOReader and open a book. Tap the top of the screen to open the menu, then tap the **🔧 Tools** icon → **More tools** (next page if you don't see it) → **Word Wise** → **Show inline hints**.
+4. **Hint level:** in the same Word Wise menu, pick a level — 1 shows only the hardest words, 5 shows the most.
 
 ## မြန်မာ
 
@@ -20,7 +21,8 @@ Dictionary data powered by [Ornagai](https://www.ornagai.com) — thank you, [Ko
 
 ၁။ **ဒေါင်းလုဒ်ဆွဲပါ** – [Release စာမျက်နှာ](https://github.com/kaungpyaehein/wordwise.koplugin/releases/latest) မှ `wordwise.koplugin.zip` ဖိုင်ကို ဒေါင်းလုဒ်ဆွဲပါ။
 ၂။ **ဖိုင်ဖြည်ပြီး ထည့်ပါ** – Zip ဖိုင်ကို ဖြည်ပြီး ရလာတဲ့ `wordwise.koplugin` ဖိုင်တွဲကို `koreader/plugins/` ထဲသို့ ကူးထည့်ပါ (Kobo စက်များအတွက် `.adds/koreader/plugins/`)။
-၃။ **ဖွင့်သုံးပါ** – KOReader ကို ပြန်ဖွင့်ပြီး **☰ → More tools → Word Wise → Show inline hints** ကို နှိပ်၍ အသုံးပြုနိုင်ပါပြီ။
+၃။ **ဖွင့်သုံးပါ** – KOReader ကို ပြန်ဖွင့်ပြီး စာအုပ်တစ်အုပ် ဖွင့်ပါ။ စခရင် အပေါ်ပိုင်းကို နှိပ်ပြီး Menu ဖွင့်ပါ → **🔧 Tools** icon → **More tools** (မတွေ့ရင် နောက်စာမျက်နှာ) → **Word Wise** → **Show inline hints** ကို နှိပ်ပါ။
+၄။ **Hint level** – Word Wise menu ထဲမှာပဲ level ရွေးပါ။ 1 = အခက်ဆုံး စကားလုံးတွေပဲ၊ 5 = စကားလုံး အများဆုံး။
 
 ---
 
