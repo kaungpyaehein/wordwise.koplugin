@@ -46,19 +46,55 @@ local HAS_MYANMAR_FONT = lfs.attributes(MYANMAR_FONT, "mode") == "file"
 -- (e.g. v2025.10) always prepend "<fontdir>/", newer ones accept "/" and "./"
 -- paths as-is. PluginLoader gives a path relative to KOReader's root
 -- ("plugins/x.koplugin"), so try it relative to fonts/ first, then as given.
+local MYANMAR_FONT_NAME = "NotoSansMyanmar-Regular.ttf"
+
+-- Last resort: copy the bundled font into KOReader's user fonts dir, which
+-- FontList scans at startup, so a bare-name lookup finds it after a restart.
+local function installMyanmarFont()
+    if not HAS_MYANMAR_FONT then return end
+    local dir = DataStorage:getDataDir() .. "/fonts"
+    local dest = dir .. "/" .. MYANMAR_FONT_NAME
+    if lfs.attributes(dest, "mode") == "file" then return end
+    if lfs.attributes(dir, "mode") ~= "directory" then lfs.mkdir(dir) end
+    local src = io.open(MYANMAR_FONT, "rb")
+    if not src then return end
+    local data = src:read("*a")
+    src:close()
+    local out = io.open(dest, "wb")
+    if not out then return end
+    out:write(data)
+    out:close()
+    logger.info("WordWise: installed Myanmar font to", dest)
+end
+
 local function loadMyanmarFace(size)
-    if not HAS_MYANMAR_FONT then return nil end
     local candidates = {}
-    if not MYANMAR_FONT:match("^/") then
-        candidates[#candidates + 1] = "../" .. MYANMAR_FONT
-        candidates[#candidates + 1] = "./" .. MYANMAR_FONT
-    else
-        candidates[#candidates + 1] = MYANMAR_FONT
+    if HAS_MYANMAR_FONT then
+        if not MYANMAR_FONT:match("^/") then
+            candidates[#candidates + 1] = "../" .. MYANMAR_FONT
+            candidates[#candidates + 1] = "./" .. MYANMAR_FONT
+        else
+            -- Absolute path (Android/Boox: /sdcard/koreader/plugins/...). Newer
+            -- KOReader takes it as-is; older ones prepend "<fontdir>/", so also
+            -- climb from fontdir up to "/" (extra ".." at root stays at root).
+            candidates[#candidates + 1] = MYANMAR_FONT
+            candidates[#candidates + 1] = string.rep("../", 24) .. MYANMAR_FONT:sub(2)
+        end
     end
+    -- Bare names: Font:getFace falls back to searching every known font dir
+    -- (user fonts dir, and /system/fonts on Android).
+    candidates[#candidates + 1] = MYANMAR_FONT_NAME
+    candidates[#candidates + 1] = "NotoSansMyanmar-Regular.otf"
+    candidates[#candidates + 1] = "NotoSansMyanmarUI-Regular.ttf"
+    candidates[#candidates + 1] = "NotoSansMyanmarUI-Regular.otf"
     for _, path in ipairs(candidates) do
-        local face = Font:getFace(path, size)
-        if face then return face end
+        local ok, face = pcall(Font.getFace, Font, path, size)
+        if ok and face then
+            logger.info("WordWise: Myanmar face loaded from", path)
+            return face
+        end
     end
+    installMyanmarFont()
 end
 
 local function needsShaping(text)

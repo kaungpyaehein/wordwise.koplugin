@@ -8,7 +8,7 @@ Dictionary data powered by [Ornagai](https://www.ornagai.com) — thank you, [Ko
 ## Installation & Setup
 
 1. **Download:** grab `wordwise.koplugin.zip` from the [latest release](https://github.com/kaungpyaehein/wordwise.koplugin/releases/latest).
-2. **Install:** unzip the file and move the `wordwise.koplugin` folder into your `koreader/plugins/` directory (Kobo: `.adds/koreader/plugins/`).
+2. **Install:** unzip the file and move the `wordwise.koplugin` folder into your `koreader/plugins/` directory (Kobo: `.adds/koreader/plugins/`; Android/Boox: internal storage `koreader/plugins/`). Keep the folder name exactly `wordwise.koplugin` — KOReader ignores folders that don't end in `.koplugin`, so delete any old copies.
 3. **Enable:** restart KOReader and open a book. Tap the top of the screen to open the menu, then tap the **🔧 Tools** icon → **More tools** (next page if you don't see it) → **Word Wise** → **Show inline hints**.
 4. **Hint level:** in the same Word Wise menu, pick a level — 1 shows only the hardest words, 5 shows the most.
 
@@ -20,7 +20,7 @@ Dictionary data powered by [Ornagai](https://www.ornagai.com) — thank you, [Ko
 **ထည့်သွင်းအသုံးပြုနည်း**
 
 ၁။ **ဒေါင်းလုဒ်ဆွဲပါ** – [Release စာမျက်နှာ](https://github.com/kaungpyaehein/wordwise.koplugin/releases/latest) မှ `wordwise.koplugin.zip` ဖိုင်ကို ဒေါင်းလုဒ်ဆွဲပါ။
-၂။ **ဖိုင်ဖြည်ပြီး ထည့်ပါ** – Zip ဖိုင်ကို ဖြည်ပြီး ရလာတဲ့ `wordwise.koplugin` ဖိုင်တွဲကို `koreader/plugins/` ထဲသို့ ကူးထည့်ပါ (Kobo စက်များအတွက် `.adds/koreader/plugins/`)။
+၂။ **ဖိုင်ဖြည်ပြီး ထည့်ပါ** – Zip ဖိုင်ကို ဖြည်ပြီး ရလာတဲ့ `wordwise.koplugin` ဖိုင်တွဲကို `koreader/plugins/` ထဲသို့ ကူးထည့်ပါ (Kobo စက်များအတွက် `.adds/koreader/plugins/`၊ Android/Boox – internal storage `koreader/plugins/`)။ ဖိုင်တွဲနာမည်ကို `wordwise.koplugin` အတိုင်းပဲ ထားပါ – `.koplugin` နဲ့ မဆုံးတဲ့ ဖိုင်တွဲကို KOReader က မဖတ်ပါ၊ အဟောင်းတွေ ဖျက်ပါ။
 ၃။ **ဖွင့်သုံးပါ** – KOReader ကို ပြန်ဖွင့်ပြီး စာအုပ်တစ်အုပ် ဖွင့်ပါ။ စခရင် အပေါ်ပိုင်းကို နှိပ်ပြီး Menu ဖွင့်ပါ → **🔧 Tools** icon → **More tools** (မတွေ့ရင် နောက်စာမျက်နှာ) → **Word Wise** → **Show inline hints** ကို နှိပ်ပါ။
 ၄။ **Hint level** – Word Wise menu ထဲမှာပဲ level ရွေးပါ။ 1 = အခက်ဆုံး စကားလုံးတွေပဲ၊ 5 = စကားလုံး အများဆုံး။
 
